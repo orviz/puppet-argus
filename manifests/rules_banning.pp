@@ -20,18 +20,18 @@ class argus::rules_banning inherits argus::params  {
   }
 
   exec {"delete_argus_policies":
-    command => "/usr/bin/pap-admin --host $::fqdn remove-all-policies",
+    command => "/usr/bin/pap-admin --host $service_name remove-all-policies",
     onlyif => "/usr/bin/test ! -s /var/cache/argus/policies_centralbanning.spl",
     notify => Service["argus-pdp"] #restart the PDP service to take the new policies into account
   }
-  
+
   exec {"update_argus_policies":
-    command => "/bin/cat /var/cache/argus/*.spl > /tmp/update$$.spl && /usr/bin/pap-admin --host $::fqdn remove-all-policies && /usr/bin/pap-admin --host $::fqdn  add-policies-from-file /tmp/update$$.spl && rm /tmp/update$$.spl",
+    command => "/bin/cat /var/cache/argus/*.spl > /tmp/update$$.spl && /usr/bin/pap-admin --host $service_name remove-all-policies && /usr/bin/pap-admin --host $service_name  add-policies-from-file /tmp/update$$.spl && rm /tmp/update$$.spl",
     refreshonly => true,
     onlyif => "/usr/bin/test -s /var/cache/argus/policies_centralbanning.spl",
     notify => Service["argus-pdp"] #restart the PDP service to take the new policies into account
   }
 
   File['/var/cache/argus'] -> File['/var/cache/argus/policies_centralbanning.spl'] -> Exec['delete_argus_policies'] -> Exec['update_argus_policies']
-  
+
 }
